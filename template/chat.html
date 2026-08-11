@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Distributed Chat · {{ username }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+</head>
+<body class="chat-page">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="side-top">
+        <div>
+          <div class="logo-row"><span class="brand small">DC</span><strong>Distributed Chat</strong></div>
+          <div class="muted small-text">Node: Browser Client</div>
+        </div>
+        <a class="logout" href="{{ url_for('logout') }}">Logout</a>
+      </div>
+
+      <div class="profile">
+        <div class="avatar" id="myAvatar"></div>
+        <div>
+          <strong id="myName">{{ username }}</strong>
+          <div class="status"><span class="dot"></span> Online</div>
+        </div>
+      </div>
+
+      <div class="users-head">
+        <span>ONLINE USERS</span>
+        <span id="userCount">0</span>
+      </div>
+      <div id="userList" class="user-list"></div>
+
+      <div class="architecture">
+        <strong>Distributed architecture</strong>
+        <p>Clients communicate through a concurrent server. Messages are routed in real time and persisted in SQLite.</p>
+      </div>
+    </aside>
+
+    <main class="chat-main">
+      <header class="chat-header">
+        <div>
+          <h2 id="chatTitle">Global Chat</h2>
+          <div class="muted" id="chatSubtitle">Broadcast message to all connected users</div>
+        </div>
+        <div class="connection"><span id="connectionDot" class="dot"></span><span id="connectionText">Connecting...</span></div>
+      </header>
+
+      <section id="messages" class="messages"></section>
+
+      <div class="composer">
+        <div class="target-row">
+          <span id="targetLabel">Sending to everyone</span>
+          <button id="clearTarget" class="tiny hidden">Clear private chat</button>
+        </div>
+        <form id="messageForm" class="message-form">
+          <input id="messageInput" maxlength="2000" placeholder="Type a message..." autocomplete="off">
+          <button class="send" type="submit">Send</button>
+        </form>
+        <div class="hint">Enter to send · Private messages are delivered only to the selected user.</div>
+      </div>
+    </main>
+  </div>
+
+<script>
+const username = {{ username|tojson }};
+const socket = io();
+let selectedRecipient = null;
+const messagesEl = document.getElementById("messages");
+const userList = document.getElementById("userList");
+const input = document.getElementById("messageInput");
+const targetLabel = document.getElementById("targetLabel");
+const clearTarget = document.getElementById("clearTarget");
+
+function avatar(name) {
+  return (name || "?").slice(0, 1).toUpperCase();
+}
+
+function timeText(iso) {
+  try {
+    return new Date(iso).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+  } catch { return ""; }
+}
+
+function addMessage(m, system=false) {
+  const row = document.createElement("div");
+  row.className = system ? "message system" : "message " + (m.sender === username ? "mine" : "theirs");
+
+  if (system) {
+    row.innerHTML = `<div>${escapeHtml(m.text)}</div>`;
+  } else {
+    const scope = m.recipient ? `Private · ${escapeHtml(m.recipient === username ? m.sender : m.recipient)}` : "Global";
+    row.innerHTML = `
+      <div class="msg-avatar">${escapeHtml(avatar(m.sender))}</div>
+      <div class="msg-body">
+        <div class="msg-meta"><strong>${escapeHtml(m.sender)}</strong><span>${scope}</span><time>${timeText(m.created_at)}</time></div>
+        <div class="bubble">${escapeHtml(m.body)}</div>
+      </div>`;
+  }
+  messagesEl.appendChild(row);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[c]));
+}
+
+async function loadHistory() {
+  const res = await fetch("/api/history");
+  if (!res.ok) return;
+  const history = await res.json();
+  history.forEach(addMessage);
+}
+
+function renderUsers(users) {
+  userList.innerHTML = "";
+  document.getElementById("userCount").textContent = users.length;
+  users.forEach(user => {
+    const button = document.createElement("button");
+    button.className = "user-item" + (user === selectedRecipient ? " selected" : "");
+    button.innerHTML = `<span class="avatar mini">${escapeHtml(avatar(user))}</span><span><strong>${escapeHtml(user)}</strong><small>${user === username ? "You" : "Click for private chat"}</small></span>`;
+    if (user !== username) button.onclick = () => selectRecipient(user);
+    else button.disabled = true;
+    userList.appendChild(button);
+  });
+}
+
+function selectRecipient(user) {
+  selectedRecipient = user;
+  document.getElementById("chatTitle").textContent = "Private Chat";
+  document.getElementById("chatSubtitle").textContent = `Messages are only visible to ${user} and you`;
+  targetLabel.textContent = `Sending privately to ${user}`;
+  clearTarget.classList.remove("hidden");
+  socket.emit("request_private_notice", {recipient: user});
+  document.querySelectorAll(".user-item").forEach(x => x.classList.remove("selected"));
+}
+
+function clearPrivate() {
+  selectedRecipient = null;
+  document.getElementById("chatTitle").textContent = "Global Chat";
+  document.getElementById("chatSubtitle").textContent = "Broadcast message to all connected users";
+  targetLabel.textContent = "Sending to everyone";
+  clearTarget.classList.add("hidden");
+}
+
+clearTarget.onclick = clearPrivate;
+
+document.getElementById("messageForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const body = input.value.trim();
+  if (!body) return;
+  socket.emit("send_message", {body, recipient: selectedRecipient});
+  input.value = "";
+  input.focus();
+});
+
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    document.getElementById("messageForm").requestSubmit();
+  }
+});
+
+socket.on("connect", () => {
+  document.getElementById("connectionText").textContent = "Connected";
+  document.getElementById("connectionDot").classList.add("online");
+});
+
+socket.on("disconnect", () => {
+  document.getElementById("connectionText").textContent = "Disconnected";
+  document.getElementById("connectionDot").classList.remove("online");
+});
+
+socket.on("online_users", renderUsers);
+socket.on("system_message", m => addMessage(m, true));
+socket.on("new_message", addMessage);
+socket.on("error_message", m => addMessage({text: "Error: " + m.text}, true));
+
+document.getElementById("myAvatar").textContent = avatar(username);
+loadHistory();
+</script>
+</body>
+</html>
