@@ -1,0 +1,123 @@
+* { box-sizing: border-box; }
+:root {
+  --bg: #eef2f7;
+  --panel: #ffffff;
+  --line: #dfe5ec;
+  --text: #172033;
+  --muted: #6c7688;
+  --primary: #4f46e5;
+  --primary-dark: #3730a3;
+  --mine: #4f46e5;
+  --soft: #f5f7fb;
+  --danger: #b42318;
+}
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+.auth-page { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.auth-card {
+  width: min(430px, 100%);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 34px;
+  box-shadow: 0 18px 50px rgba(20,30,55,.08);
+}
+.brand {
+  width: 48px; height: 48px; display: grid; place-items: center;
+  border-radius: 14px; background: var(--primary); color: white; font-weight: 800;
+  letter-spacing: -1px;
+}
+.brand.small { width: 34px; height: 34px; border-radius: 10px; font-size: 12px; }
+.auth-card h1 { margin: 18px 0 6px; font-size: 28px; }
+.muted { color: var(--muted); }
+.small-text { font-size: 12px; margin-top: 3px; }
+form { display: grid; gap: 10px; margin-top: 24px; }
+label { font-size: 13px; font-weight: 700; margin-top: 6px; }
+input {
+  width: 100%; border: 1px solid var(--line); border-radius: 10px;
+  padding: 13px 14px; font-size: 15px; outline: none; background: white;
+}
+input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.10); }
+button { font: inherit; cursor: pointer; border: 0; }
+.primary, .send {
+  background: var(--primary); color: white; border-radius: 10px; padding: 13px 16px;
+  font-weight: 750; margin-top: 8px;
+}
+.primary:hover, .send:hover { background: var(--primary-dark); }
+.switch { text-align: center; margin: 22px 0 0; font-size: 14px; }
+a { color: var(--primary); font-weight: 700; text-decoration: none; }
+.alert { background: #fff1f0; color: var(--danger); border: 1px solid #ffd0cc; padding: 10px 12px; border-radius: 10px; margin-top: 18px; font-size: 14px; }
+
+.chat-page { height: 100vh; overflow: hidden; }
+.app-shell { height: 100vh; display: grid; grid-template-columns: 300px 1fr; }
+.sidebar {
+  background: #111827; color: white; padding: 20px; display: flex; flex-direction: column;
+  min-width: 0;
+}
+.side-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.logo-row { display: flex; align-items: center; gap: 10px; }
+.sidebar .muted { color: #9aa4b5; }
+.logout { color: #cbd5e1; font-size: 13px; padding-top: 7px; }
+.profile { display: flex; gap: 12px; align-items: center; padding: 24px 0 20px; border-bottom: 1px solid #273142; }
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+  background: #6366f1; color: white; font-weight: 800;
+}
+.avatar.mini { width: 34px; height: 34px; font-size: 12px; flex: 0 0 auto; }
+.status { font-size: 12px; color: #aeb8c7; margin-top: 3px; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; margin-right: 6px; }
+.dot.online { background: #22c55e; }
+.users-head { display: flex; justify-content: space-between; margin: 20px 0 8px; font-size: 11px; color: #9aa4b5; font-weight: 800; letter-spacing: .08em; }
+.user-list { overflow: auto; }
+.user-item {
+  width: 100%; display: flex; gap: 10px; align-items: center; text-align: left;
+  padding: 9px; border-radius: 10px; color: #e5e7eb; background: transparent;
+}
+.user-item:hover, .user-item.selected { background: #202a3b; }
+.user-item strong { display: block; font-size: 14px; }
+.user-item small { display: block; color: #8e9aac; margin-top: 2px; font-size: 11px; }
+.architecture {
+  margin-top: auto; border: 1px solid #293449; background: #182132; padding: 13px;
+  border-radius: 12px; font-size: 12px; color: #cbd5e1;
+}
+.architecture p { margin: 7px 0 0; line-height: 1.45; color: #98a4b6; }
+
+.chat-main { min-width: 0; display: grid; grid-template-rows: auto 1fr auto; background: #f8fafc; }
+.chat-header {
+  padding: 18px 26px; border-bottom: 1px solid var(--line); background: white;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.chat-header h2 { margin: 0 0 4px; font-size: 19px; }
+.connection { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.messages { overflow: auto; padding: 24px 26px; }
+.message { display: flex; gap: 10px; max-width: 760px; margin-bottom: 17px; }
+.message.mine { margin-left: auto; flex-direction: row-reverse; }
+.msg-avatar { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; background: #e0e7ff; color: #3730a3; font-weight: 800; font-size: 12px; }
+.msg-body { min-width: 0; }
+.msg-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 5px; font-size: 12px; color: var(--muted); }
+.mine .msg-meta { justify-content: flex-end; }
+.msg-meta strong { color: var(--text); }
+.msg-meta time { opacity: .8; }
+.bubble { background: white; border: 1px solid var(--line); padding: 10px 13px; border-radius: 4px 14px 14px 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.mine .bubble { background: var(--mine); color: white; border-color: var(--mine); border-radius: 14px 4px 14px 14px; }
+.system { margin: 12px auto; color: var(--muted); text-align: center; font-size: 12px; display: block; }
+.composer { background: white; border-top: 1px solid var(--line); padding: 12px 20px 15px; }
+.target-row { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin: 0 auto 8px; max-width: 980px; }
+.message-form { display: flex; gap: 10px; max-width: 980px; margin: 0 auto; }
+.message-form input { margin: 0; }
+.send { margin: 0; padding-inline: 24px; }
+.hint { max-width: 980px; margin: 7px auto 0; color: #98a2b3; font-size: 11px; }
+.tiny { background: #eef2ff; color: #4338ca; padding: 5px 8px; border-radius: 7px; font-size: 11px; }
+.hidden { display: none; }
+
+@media (max-width: 760px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .chat-header { padding: 15px; }
+  .messages { padding: 18px 14px; }
+  .composer { padding: 10px; }
+}
